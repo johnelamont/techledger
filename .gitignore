@@ -20,8 +20,14 @@ Thumbs.db
 *.log
 
 # Environment files (if you add them later)
+node_modules/
 .env
 .env.local
+dist/
+build/
+uploads/
+*.log
+google-vision-credentials.json
 
 # Personal notes (if you want to keep private notes)
 PRIVATE_NOTES.md

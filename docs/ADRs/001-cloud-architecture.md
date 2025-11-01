@@ -35,7 +35,7 @@ All OCR, computer vision processing, pattern matching, and documentation generat
 
 **Technical Architecture:**
 - **Frontend:** React + TypeScript SPA (Single Page Application)
-- **Backend:** Node.js + Express API
+- **Backend:** Python + FastAPI (see ADR 003)
 - **Vision Processing:** Google Cloud Vision API (primary), AWS Rekognition (backup)
 - **Storage:** AWS S3 or Google Cloud Storage for images/documents
 - **Database:** PostgreSQL for users, patterns, training data, documentation

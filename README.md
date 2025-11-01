@@ -134,7 +134,7 @@ Source code development begins in Phase 1. See ADRs for technical stack decision
 
 **Tech Stack Overview:**
 - **Frontend:** React + TypeScript SPA
-- **Backend:** Node.js + Express API
+- **Backend:** Python + Fast API
 - **Vision Processing:** Google Cloud Vision API
 - **Database:** PostgreSQL
 - **Hosting:** Vercel (frontend) + Railway/Render (backend)
