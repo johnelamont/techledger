@@ -1,3 +1,44 @@
+# TechLedger
+
+AI-assisted documentation generation for business processes.
+
+## Project Structure
+
+- `docs/` - All project documentation
+  - `ADRs/` - Architecture Decision Records
+  - `api/` - Post MVP external facing REST API documentation
+  - `architecture/` - System design docs
+  - `operations/` - Business, Deployment, Security and Compliance
+  - `planning/` - Project planning and open issues
+  - `strategy/` - VMOSA, Glossary, Features, Success metrics, etc.
+  - `user-guides` - Post MVP
+- `src/` - Application source code (Phase 1 development)
+  - `frontend/` - React + TypeScript SPA
+  - `backend/` - Node.js + Express API
+  - `shared/` - Shared types and utilities
+- `infrastructure/` - Deployment configurations
+- `tests/` - Test suites
+
+## Current Phase
+
+**Phase 0: Planning & Architecture** ✅
+- ✅ ADR 001: Cloud-Based Architecture
+- ✅ ADR 002: Role-Based Navigation Model
+
+**Phase 1: MVP Development** (Months 1-6) - Starting Soon
+- React frontend with screenshot upload
+- Google Cloud Vision integration
+- Basic documentation generation
+
+## Architecture Decisions
+
+- [ADR 001: Cloud-Based Architecture](docs/ADRs/001-cloud-architecture.md)
+- [ADR 002: Role-Based Navigation](docs/ADRs/002-role-based-navigation.md)
+
+## Development
+
+Source code development begins in Phase 1. See ADRs for technical stack decisions.
+
 # techledger - Project Manifest
 
 **Last Updated:** 2025-10-11  
