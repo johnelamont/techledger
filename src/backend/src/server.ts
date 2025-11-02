@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { testVisionAPI } from './services/visionService';
 
 dotenv.config();
 
@@ -21,6 +22,24 @@ app.get('/health', (req, res) => {
     message: 'TechLedger API is running',
     timestamp: new Date().toISOString()
   });
+});
+
+// Test Vision API
+app.get('/api/vision/test', async (req, res) => {
+  try {
+    const isConnected = await testVisionAPI();
+    res.json({
+      status: isConnected ? 'connected' : 'failed',
+      message: isConnected
+        ? 'Vision API is working'
+        : 'Vision API connection failed',
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
 });
 
 // Start server
