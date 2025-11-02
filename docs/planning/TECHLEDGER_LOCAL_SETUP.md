@@ -7,6 +7,13 @@
 **Estimated Setup Time:** 2-3 hours
 
 ---
+## Key URLS & Runners
+FRONTEND_URL=http://localhost:5173
+cd C:\Users\YourUsername\Documents\techledger\frontend
+npm run dev
+cd C:\Users\YourUsername\Documents\techledger\frontend
+npm run dev
+---
 
 ## Prerequisites Check
 
