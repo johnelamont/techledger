@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { testVisionAPI } from './services/visionService';
 import uploadRoutes from './routes/uploadRoutes';
+import linksRoutes from './routes/linksRoutes';  // ADD THIS LINE
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', uploadRoutes);
+app.use('/api', linksRoutes);  // ADD THIS LINE
 
 // Health check route
 app.get('/health', (req, res) => {
