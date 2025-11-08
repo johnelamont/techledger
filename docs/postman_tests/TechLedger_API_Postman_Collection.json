@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "TechLedger API - Phase 1",
+    "description": "Complete CRUD operations for Users, Systems, Actions, and Screenshots",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:3001/health"
+      }
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "1. Create User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john2@techledger.com\",\n  \"name\": \"John Lamont\"\n}"
+            },
+            "url": "http://localhost:3001/api/users"
+          },
+ "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('user_id', jsonData.sapk || jsonData.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Get All Users",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/users"
+          }
+        },
+        {
+          "name": "3. Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/users/1"
+          }
+        },
+        {
+          "name": "4. Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John E. Lamont\"\n}"
+            },
+            "url": "http://localhost:3001/api/users/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Systems",
+      "item": [
+        {
+          "name": "1. Create System",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"name\": \"Salesforce\",\n  \"description\": \"CRM System\"\n}"
+            },
+            "url": "http://localhost:3001/api/systems"
+          }
+        },
+        {
+          "name": "2. Get User's Systems",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/users/1/systems"
+          }
+        },
+        {
+          "name": "3. Get System by ID",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/systems/1"
+          }
+        },
+        {
+          "name": "4. Update System",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": "http://localhost:3001/api/systems/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Actions",
+      "item": [
+        {
+          "name": "1. Create Action",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"system_id\": 1,\n  \"title\": \"Login to Salesforce\",\n  \"description\": \"How to log in\",\n  \"steps\": [\n    {\"step_number\": 1, \"instruction\": \"Go to login.salesforce.com\"},\n    {\"step_number\": 2, \"instruction\": \"Enter credentials\"}\n  ]\n}"
+            },
+            "url": "http://localhost:3001/api/actions"
+          }
+        },
+        {
+          "name": "2. Get System's Actions",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/systems/1/actions"
+          }
+        },
+        {
+          "name": "3. Get Action by ID",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/actions/1"
+          }
+        },
+        {
+          "name": "4. Update Action",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated instructions\"\n}"
+            },
+            "url": "http://localhost:3001/api/actions/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Screenshots",
+      "item": [
+        {
+          "name": "1. Create Screenshot",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action_id\": 1,\n  \"file_path\": \"/uploads/screenshot-123.png\",\n  \"original_filename\": \"salesforce-login.png\"\n}"
+            },
+            "url": "http://localhost:3001/api/screenshots"
+          }
+        },
+        {
+          "name": "2. Get Action's Screenshots",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/actions/1/screenshots"
+          }
+        },
+        {
+          "name": "3. Get Screenshot by ID",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3001/api/screenshots/1"
+          }
+        },
+        {
+          "name": "4. Update Screenshot (Add OCR)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ocr_data\": {\n    \"full_text\": \"Login\",\n    \"words\": [{\"text\": \"Login\", \"confidence\": 0.99}]\n  }\n}"
+            },
+            "url": "http://localhost:3001/api/screenshots/1"
+          }
+        }
+      ]
+    }
+  ]
+}

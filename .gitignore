@@ -32,3 +32,6 @@ google-vision-credentials.json
 # Personal notes (if you want to keep private notes)
 PRIVATE_NOTES.md
 **/PRIVATE_*
+
+# Claude's Instructions
+docs/claude_instructions

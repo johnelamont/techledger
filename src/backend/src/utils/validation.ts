@@ -732,3 +732,40 @@ export function validateAddActionToSequence(input: any): void {
     errors.throw('Invalid sequence action data');
   }
 }
+// ============================================================================
+// GENERIC VALIDATION FUNCTIONS (for routes)
+// ============================================================================
+
+/**
+ * Validate that required fields are present in an object
+ * Generic version for route-level validation
+ * @throws ValidationError if any required field is missing
+ */
+export function validateRequired(fields: string[], data: any): void {
+  const missing = fields.filter(field => {
+    const value = data[field];
+    return value === undefined || value === null || value === '';
+  });
+
+  if (missing.length > 0) {
+    throw new ValidationError(
+      `Missing required fields: ${missing.join(', ')}`
+    );
+  }
+}
+
+/**
+ * Validate email format (exported version)
+ * @returns true if email is valid, false otherwise
+ */
+export function validateEmail(email: string): boolean {
+  return isValidEmail(email);
+}
+
+/**
+ * Validate that a value is a positive integer (exported version)
+ * @returns true if value is a positive integer, false otherwise
+ */
+export function validatePositiveInteger(value: any): boolean {
+  return isPositiveInteger(value);
+}
