@@ -300,6 +300,146 @@ export interface ActionSequenceWithActions extends ActionSequence {
 }
 
 // ============================================================================
+// ROLE MODEL (for role-based navigation)
+// ============================================================================
+
+/**
+ * Role - represents a job function or position
+ * Examples: "Sales Representative", "Office Manager", "Accountant"
+ */
+export interface Role {
+  id: number;
+  user_id: number;
+  name: string;
+  description: string | null;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface CreateRoleInput {
+  user_id: number;
+  name: string;
+  description?: string;
+  display_order?: number;
+}
+
+export interface UpdateRoleInput {
+  name?: string;
+  description?: string;
+  display_order?: number;
+}
+
+// ============================================================================
+// TASK MODEL (for task-based navigation)
+// ============================================================================
+
+/**
+ * Task - represents a goal-oriented collection of actions
+ * Examples: "Qualify New Lead", "Process Vendor Payment", "Generate Monthly Report"
+ */
+export interface Task {
+  id: number;
+  user_id: number;
+  name: string;
+  description: string | null;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface CreateTaskInput {
+  user_id: number;
+  name: string;
+  description?: string;
+  display_order?: number;
+}
+
+export interface UpdateTaskInput {
+  name?: string;
+  description?: string;
+  display_order?: number;
+}
+
+// ============================================================================
+// ROLE-TASK JUNCTION (many-to-many)
+// ============================================================================
+
+/**
+ * RoleTask - links roles to tasks with order
+ * One role can have many tasks, one task can belong to many roles
+ */
+export interface RoleTask {
+  id: number;
+  role_id: number;
+  task_id: number;
+  display_order: number;
+}
+
+export interface CreateRoleTaskInput {
+  role_id: number;
+  task_id: number;
+  display_order?: number;
+}
+
+export interface UpdateRoleTaskInput {
+  display_order: number;
+}
+
+// ============================================================================
+// TASK-ACTION JUNCTION (many-to-many)
+// ============================================================================
+
+/**
+ * TaskAction - links tasks to actions with order and optional notes
+ * One task can have many actions, one action can belong to many tasks
+ */
+export interface TaskAction {
+  id: number;
+  task_id: number;
+  action_id: number;
+  display_order: number;
+  notes: string | null;
+}
+
+export interface CreateTaskActionInput {
+  task_id: number;
+  action_id: number;
+  display_order?: number;
+  notes?: string;
+}
+
+export interface UpdateTaskActionInput {
+  display_order?: number;
+  notes?: string;
+}
+
+// ============================================================================
+// NAVIGATION HELPER TYPES
+// ============================================================================
+
+/**
+ * Role with its associated tasks (for navigation)
+ */
+export interface RoleWithTasks extends Role {
+  tasks: Array<Task & { display_order: number }>;
+}
+
+/**
+ * Task with its associated actions (for navigation)
+ */
+export interface TaskWithActions extends Task {
+  actions: Array<Action & { display_order: number; notes: string | null }>;
+}
+
+/**
+ * Full navigation path: Role → Task → Actions
+ */
+export interface NavigationPath {
+  role: Role;
+  task: Task;
+  actions: Array<Action & { display_order: number; notes: string | null }>;
+}
+
+// ============================================================================
 // UTILITY TYPES
 // ============================================================================
 

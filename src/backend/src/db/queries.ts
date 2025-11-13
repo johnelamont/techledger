@@ -25,9 +25,22 @@ import {
   UpdateScreenshotInput,
   QueryOptions,
   PaginatedResult,
+  Role,
+  CreateRoleInput,
+  UpdateRoleInput,
+  Task,
+  CreateTaskInput,
+  UpdateTaskInput,
+  RoleTask,
+  CreateRoleTaskInput,
+  TaskAction,
+  CreateTaskActionInput,
+  UpdateTaskActionInput,
 } from '../types/models';
+
 import {
   NotFoundError,
+  ValidationError,
   handleDatabaseError,
   assertExists,
   safeJSONParse,
@@ -665,6 +678,631 @@ export async function deleteScreenshot(id: number): Promise<boolean> {
   }
 }
 
+// ============================================================================
+// ROLE QUERIES
+// ============================================================================
+
+/**
+ * Create a new role
+ */
+export async function createRole(input: CreateRoleInput): Promise<Role> {
+  const query = `
+    INSERT INTO roles (user_id, name, description, display_order)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [
+      input.user_id,
+      input.name,
+      input.description || null,
+      input.display_order || 0,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    handleDatabaseError(error, 'Role creation');
+  }
+}
+
+/**
+ * Get role by ID
+ */
+export async function getRoleById(id: number): Promise<Role> {
+  const query = 'SELECT * FROM roles WHERE id = $1';
+
+  try {
+    const result = await pool.query(query, [id]);
+    assertExists(result.rows[0], 'Role', id);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Get role by ID');
+  }
+}
+
+/**
+ * Get all roles for a user
+ */
+export async function getRolesByUserId(
+  userId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Role>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+  const orderBy = options.orderBy || 'display_order';
+  const orderDirection = options.orderDirection || 'ASC';
+
+  const countQuery = 'SELECT COUNT(*) FROM roles WHERE user_id = $1';
+  const dataQuery = `
+    SELECT * FROM roles
+    WHERE user_id = $1
+    ORDER BY ${orderBy} ${orderDirection}
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [userId]),
+      pool.query(dataQuery, [userId, limit, offset]),
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get roles by user');
+  }
+}
+
+/**
+ * Update role by ID
+ */
+export async function updateRole(
+  id: number,
+  input: UpdateRoleInput
+): Promise<Role> {
+  const updates: string[] = [];
+  const values: any[] = [];
+  let paramCount = 1;
+
+  if (input.name !== undefined) {
+    updates.push(`name = $${paramCount++}`);
+    values.push(input.name);
+  }
+
+  if (input.description !== undefined) {
+    updates.push(`description = $${paramCount++}`);
+    values.push(input.description);
+  }
+
+  if (input.display_order !== undefined) {
+    updates.push(`display_order = $${paramCount++}`);
+    values.push(input.display_order);
+  }
+
+  const query = `
+    UPDATE roles
+    SET ${updates.join(', ')}
+    WHERE id = $${paramCount}
+    RETURNING *
+  `;
+  values.push(id);
+
+  try {
+    const result = await pool.query(query, values);
+    assertExists(result.rows[0], 'Role', id);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Update role');
+  }
+}
+
+/**
+ * Delete role by ID
+ * NOTE: This will cascade delete all role_tasks entries
+ */
+export async function deleteRole(id: number): Promise<boolean> {
+  const query = 'DELETE FROM roles WHERE id = $1 RETURNING id';
+
+  try {
+    const result = await pool.query(query, [id]);
+    assertExists(result.rows[0], 'Role', id);
+    return true;
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Delete role');
+  }
+}
+
+// ============================================================================
+// TASK QUERIES
+// ============================================================================
+
+/**
+ * Create a new task
+ */
+export async function createTask(input: CreateTaskInput): Promise<Task> {
+  const query = `
+    INSERT INTO tasks (user_id, name, description, display_order)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [
+      input.user_id,
+      input.name,
+      input.description || null,
+      input.display_order || 0,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    handleDatabaseError(error, 'Task creation');
+  }
+}
+
+/**
+ * Get task by ID
+ */
+export async function getTaskById(id: number): Promise<Task> {
+  const query = 'SELECT * FROM tasks WHERE id = $1';
+
+  try {
+    const result = await pool.query(query, [id]);
+    assertExists(result.rows[0], 'Task', id);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Get task by ID');
+  }
+}
+
+/**
+ * Get all tasks for a user
+ */
+export async function getTasksByUserId(
+  userId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Task>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+  const orderBy = options.orderBy || 'display_order';
+  const orderDirection = options.orderDirection || 'ASC';
+
+  const countQuery = 'SELECT COUNT(*) FROM tasks WHERE user_id = $1';
+  const dataQuery = `
+    SELECT * FROM tasks
+    WHERE user_id = $1
+    ORDER BY ${orderBy} ${orderDirection}
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [userId]),
+      pool.query(dataQuery, [userId, limit, offset]),
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get tasks by user');
+  }
+}
+
+/**
+ * Update task by ID
+ */
+export async function updateTask(
+  id: number,
+  input: UpdateTaskInput
+): Promise<Task> {
+  const updates: string[] = [];
+  const values: any[] = [];
+  let paramCount = 1;
+
+  if (input.name !== undefined) {
+    updates.push(`name = $${paramCount++}`);
+    values.push(input.name);
+  }
+
+  if (input.description !== undefined) {
+    updates.push(`description = $${paramCount++}`);
+    values.push(input.description);
+  }
+
+  if (input.display_order !== undefined) {
+    updates.push(`display_order = $${paramCount++}`);
+    values.push(input.display_order);
+  }
+
+  const query = `
+    UPDATE tasks
+    SET ${updates.join(', ')}
+    WHERE id = $${paramCount}
+    RETURNING *
+  `;
+  values.push(id);
+
+  try {
+    const result = await pool.query(query, values);
+    assertExists(result.rows[0], 'Task', id);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Update task');
+  }
+}
+
+/**
+ * Delete task by ID
+ * NOTE: This will cascade delete all role_tasks and task_actions entries
+ */
+export async function deleteTask(id: number): Promise<boolean> {
+  const query = 'DELETE FROM tasks WHERE id = $1 RETURNING id';
+
+  try {
+    const result = await pool.query(query, [id]);
+    assertExists(result.rows[0], 'Task', id);
+    return true;
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Delete task');
+  }
+}
+
+// ============================================================================
+// ROLE-TASK JUNCTION QUERIES
+// ============================================================================
+
+/**
+ * Link a task to a role
+ */
+export async function linkTaskToRole(
+  input: CreateRoleTaskInput
+): Promise<RoleTask> {
+  const query = `
+    INSERT INTO role_tasks (role_id, task_id, display_order)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [
+      input.role_id,
+      input.task_id,
+      input.display_order || 0,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    handleDatabaseError(error, 'Link task to role');
+  }
+}
+
+/**
+ * Unlink a task from a role
+ */
+export async function unlinkTaskFromRole(
+  roleId: number,
+  taskId: number
+): Promise<boolean> {
+  const query = 'DELETE FROM role_tasks WHERE role_id = $1 AND task_id = $2 RETURNING id';
+
+  try {
+    const result = await pool.query(query, [roleId, taskId]);
+    assertExists(result.rows[0], 'RoleTask link', `role_id=${roleId}, task_id=${taskId}`);
+    return true;
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Unlink task from role');
+  }
+}
+
+/**
+ * Get all tasks for a role (ordered)
+ */
+export async function getTasksForRole(
+  roleId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Task & { display_order: number }>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM tasks t
+    INNER JOIN role_tasks rt ON t.id = rt.task_id
+    WHERE rt.role_id = $1
+  `;
+
+  const dataQuery = `
+    SELECT t.*, rt.display_order
+    FROM tasks t
+    INNER JOIN role_tasks rt ON t.id = rt.task_id
+    WHERE rt.role_id = $1
+    ORDER BY rt.display_order ASC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [roleId]),
+      pool.query(dataQuery, [roleId, limit, offset]),
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get tasks for role');
+  }
+}
+
+/**
+ * Get all roles that have a specific task
+ */
+export async function getRolesForTask(
+  taskId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Role & { display_order: number }>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM roles r
+    INNER JOIN role_tasks rt ON r.id = rt.role_id
+    WHERE rt.task_id = $1
+  `;
+
+  const dataQuery = `
+    SELECT r.*, rt.display_order
+    FROM roles r
+    INNER JOIN role_tasks rt ON r.id = rt.role_id
+    WHERE rt.task_id = $1
+    ORDER BY r.display_order ASC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [taskId]),
+      pool.query(dataQuery, [taskId, limit, offset]),
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get roles for task');
+  }
+}
+
+/**
+ * Update the display order of a task within a role
+ */
+export async function reorderTaskInRole(
+  roleId: number,
+  taskId: number,
+  newOrder: number
+): Promise<RoleTask> {
+  const query = `
+    UPDATE role_tasks
+    SET display_order = $3
+    WHERE role_id = $1 AND task_id = $2
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [roleId, taskId, newOrder]);
+    assertExists(result.rows[0], 'RoleTask link', `role_id=${roleId}, task_id=${taskId}`);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Reorder task in role');
+  }
+}
+
+// ============================================================================
+// TASK-ACTION JUNCTION QUERIES
+// ============================================================================
+
+/**
+ * Link an action to a task
+ */
+export async function linkActionToTask(
+  input: CreateTaskActionInput
+): Promise<TaskAction> {
+  const query = `
+    INSERT INTO task_actions (task_id, action_id, display_order, notes)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [
+      input.task_id,
+      input.action_id,
+      input.display_order || 0,
+      input.notes || null,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    handleDatabaseError(error, 'Link action to task');
+  }
+}
+
+/**
+ * Unlink an action from a task
+ */
+export async function unlinkActionFromTask(
+  taskId: number,
+  actionId: number
+): Promise<boolean> {
+  const query = 'DELETE FROM task_actions WHERE task_id = $1 AND action_id = $2 RETURNING id';
+
+  try {
+    const result = await pool.query(query, [taskId, actionId]);
+    assertExists(result.rows[0], 'TaskAction link', `task_id=${taskId}, action_id=${actionId}`);
+    return true;
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    handleDatabaseError(error, 'Unlink action from task');
+  }
+}
+
+/**
+ * Get all actions for a task (ordered)
+ */
+export async function getActionsForTask(
+  taskId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Action & { display_order: number; notes: string | null }>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM actions a
+    INNER JOIN task_actions ta ON a.id = ta.action_id
+    WHERE ta.task_id = $1
+  `;
+
+  const dataQuery = `
+    SELECT a.*, ta.display_order, ta.notes
+    FROM actions a
+    INNER JOIN task_actions ta ON a.id = ta.action_id
+    WHERE ta.task_id = $1
+    ORDER BY ta.display_order ASC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [taskId]),
+      pool.query(dataQuery, [taskId, limit, offset]),
+    ]);
+
+    // Parse JSONB fields for actions
+    const actions = dataResult.rows.map((action: any) => ({
+      ...action,
+      steps: safeJSONParse(action.steps),
+      screenshots: safeJSONParse(action.screenshots),
+    }));
+
+    return {
+      data: actions,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get actions for task');
+  }
+}
+
+/**
+ * Get all tasks that contain a specific action
+ */
+export async function getTasksForAction(
+  actionId: number,
+  options: QueryOptions = {}
+): Promise<PaginatedResult<Task & { display_order: number; notes: string | null }>> {
+  const limit = options.limit || 50;
+  const offset = options.offset || 0;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM tasks t
+    INNER JOIN task_actions ta ON t.id = ta.task_id
+    WHERE ta.action_id = $1
+  `;
+
+  const dataQuery = `
+    SELECT t.*, ta.display_order, ta.notes
+    FROM tasks t
+    INNER JOIN task_actions ta ON t.id = ta.task_id
+    WHERE ta.action_id = $1
+    ORDER BY t.display_order ASC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(countQuery, [actionId]),
+      pool.query(dataQuery, [actionId, limit, offset]),
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit,
+      offset,
+    };
+  } catch (error) {
+    handleDatabaseError(error, 'Get tasks for action');
+  }
+}
+
+/**
+ * Update the display order and/or notes of an action within a task
+ */
+export async function reorderActionInTask(
+  taskId: number,
+  actionId: number,
+  input: UpdateTaskActionInput
+): Promise<TaskAction> {
+  const updates: string[] = [];
+  const values: any[] = [];
+  let paramCount = 1;
+
+  if (input.display_order !== undefined) {
+    updates.push(`display_order = $${paramCount++}`);
+    values.push(input.display_order);
+  }
+
+  if (input.notes !== undefined) {
+    updates.push(`notes = $${paramCount++}`);
+    values.push(input.notes);
+  }
+
+  if (updates.length === 0) {
+    throw new ValidationError('At least one field (display_order or notes) must be provided');
+  }
+
+  const query = `
+    UPDATE task_actions
+    SET ${updates.join(', ')}
+    WHERE task_id = $${paramCount} AND action_id = $${paramCount + 1}
+    RETURNING *
+  `;
+  values.push(taskId, actionId);
+
+  try {
+    const result = await pool.query(query, values);
+    assertExists(result.rows[0], 'TaskAction link', `task_id=${taskId}, action_id=${actionId}`);
+    return result.rows[0];
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    if (error instanceof ValidationError) throw error;
+    handleDatabaseError(error, 'Reorder action in task');
+  }
+}
 // ============================================================================
 // UTILITY QUERIES
 // ============================================================================

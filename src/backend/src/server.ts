@@ -8,6 +8,8 @@ import userRoutes from './routes/userRoutes';
 import systemRoutes from './routes/systemRoutes';
 import actionRoutes from './routes/actionRoutes';
 import screenshotRoutes from './routes/screenshotRoutes';
+import roleRoutes from './routes/roleRoutes';
+import taskRoutes from './routes/taskRoutes';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use('/api', userRoutes);
 app.use('/api', systemRoutes);
 app.use('/api', actionRoutes);
 app.use('/api', screenshotRoutes)
+app.use('/api', roleRoutes);
+app.use('/api', taskRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
