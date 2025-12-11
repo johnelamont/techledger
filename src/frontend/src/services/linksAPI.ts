@@ -1,5 +1,5 @@
 import api from './api';
-import { Link, CreateLinkInput, LinkWithContext } from '../types/links';
+import type { Link, CreateLinkInput, LinkWithContext } from '../types/links';
 
 // Copy the Link types to frontend/src/types/links.ts as well
 

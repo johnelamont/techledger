@@ -14,4 +14,21 @@ export const healthCheck = async () => {
   return response.data;
 };
 
+// Helper for authenticated requests
+export const authenticatedRequest = async (
+  method: 'get' | 'post' | 'put' | 'delete',
+  url: string,
+  token: string,
+  data?: any
+) => {
+  const response = await api.request({
+    method,
+    url,
+    data,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
 export default api;

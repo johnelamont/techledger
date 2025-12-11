@@ -11,6 +11,7 @@ import screenshotRoutes from './routes/screenshotRoutes';
 import roleRoutes from './routes/roleRoutes';
 import taskRoutes from './routes/taskRoutes';
 
+
 dotenv.config();
 
 const app = express();
@@ -18,7 +19,8 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173'
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true // ADD THIS - Important for auth cookies
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

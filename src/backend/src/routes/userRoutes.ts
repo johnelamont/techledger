@@ -9,6 +9,7 @@ import express, { Request, Response } from 'express';
 import * as queries from '../db/queries';
 import { validateEmail, validateRequired } from '../utils/validation';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ const router = express.Router();
  * - orderBy: string (default: 'created_at')
  * - orderDirection: 'ASC' | 'DESC' (default: 'DESC')
  */
-router.get('/users', async (req: Request, res: Response) => {
+router.get('/users', requireAuth, async (req: Request, res: Response) => {
   try {
     const options = {
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
@@ -54,7 +55,7 @@ router.get('/users', async (req: Request, res: Response) => {
  * GET /api/users/:id
  * Get a single user by ID
  */
-router.get('/users/:id', async (req: Request, res: Response) => {
+router.get('/users/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
 
@@ -92,7 +93,7 @@ router.get('/users/:id', async (req: Request, res: Response) => {
  * GET /api/users/email/:email
  * Get a user by email address
  */
-router.get('/users/email/:email', async (req: Request, res: Response) => {
+router.get('/users/email/:email', requireAuth, async (req: Request, res: Response) => {
   try {
     const email = req.params.email;
 
@@ -190,7 +191,7 @@ router.post('/users', async (req: Request, res: Response) => {
  * - email: string (optional)
  * - name: string (optional)
  */
-router.put('/users/:id', async (req: Request, res: Response) => {
+router.put('/users/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
 
@@ -259,7 +260,7 @@ router.put('/users/:id', async (req: Request, res: Response) => {
  * DELETE /api/users/:id
  * Delete a user (and all associated data via CASCADE)
  */
-router.delete('/users/:id', async (req: Request, res: Response) => {
+router.delete('/users/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
 
@@ -293,4 +294,38 @@ router.delete('/users/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/users/me
+ * Get current authenticated user profile
+ * This must come BEFORE /users/:id to avoid route collision
+ */
+router.get('/users/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+    
+    if (!clerkUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authenticated',
+      });
+    }
+
+    // For now, just return the Clerk user ID
+    // Later, you'll link this to your database user
+    res.json({
+      success: true,
+      data: {
+        clerkUserId,
+        sessionId: req.auth?.sessionId,
+        message: 'Authenticated successfully'
+      },
+    });
+  } catch (error: any) {
+    console.error('GET /api/users/me error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch current user',
+    });
+  }
+});
 export default router;

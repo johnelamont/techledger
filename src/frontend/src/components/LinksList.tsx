@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LinkWithContext } from '../types/links';
-import { getObjectLinks } from '../services/linksApi';
+import type { LinkWithContext } from '../types/links';
+import { getObjectLinks } from '../services/linksAPI';
 
 interface LinksListProps {
   objectType: 'systems' | 'actions' | 'roles' | 'tasks';
