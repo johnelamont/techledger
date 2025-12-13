@@ -14,19 +14,21 @@
 
 export interface User {
   id: number;
-  email: string;
+  email: string | null;
   name: string;
+  clerk_user_id?: string | null;  // Clerk authentication user ID
   created_at: Date;
   updated_at: Date;
 }
 
 export interface CreateUserInput {
-  email: string;
+  email?: string | null;
   name: string;
+  clerk_user_id?: string;  // Clerk user ID for linking
 }
 
 export interface UpdateUserInput {
-  email?: string;  // ? means optional
+  email?: string | null;  // ? means optional
   name?: string;
 }
 

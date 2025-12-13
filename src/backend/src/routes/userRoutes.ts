@@ -52,6 +52,53 @@ router.get('/users', requireAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/users/me
+ * Get current authenticated user profile
+ * This automatically creates a database user record on first login
+ * This must come BEFORE /users/:id to avoid route collision
+ */
+router.get('/users/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+
+    if (!clerkUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authenticated',
+      });
+    }
+
+    // Fetch user data from Clerk to get email and name
+    const { clerkClient } = await import('@clerk/clerk-sdk-node');
+    const clerkUser = await clerkClient.users.getUser(clerkUserId);
+
+    // Get or create user in our database
+    const user = await queries.getOrCreateUserFromClerk(
+      clerkUserId,
+      clerkUser.emailAddresses[0]?.emailAddress || null,
+      clerkUser.firstName && clerkUser.lastName
+        ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim()
+        : clerkUser.firstName || clerkUser.lastName || clerkUser.username || 'User'
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...user,
+        clerkUserId,
+        sessionId: req.auth?.sessionId,
+      },
+    });
+  } catch (error: any) {
+    console.error('GET /api/users/me error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch current user',
+    });
+  }
+});
+
+/**
  * GET /api/users/:id
  * Get a single user by ID
  */
@@ -294,38 +341,4 @@ router.delete('/users/:id', requireAuth, async (req: Request, res: Response) => 
   }
 });
 
-/**
- * GET /api/users/me
- * Get current authenticated user profile
- * This must come BEFORE /users/:id to avoid route collision
- */
-router.get('/users/me', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const clerkUserId = req.auth?.userId;
-    
-    if (!clerkUserId) {
-      return res.status(401).json({
-        success: false,
-        error: 'Not authenticated',
-      });
-    }
-
-    // For now, just return the Clerk user ID
-    // Later, you'll link this to your database user
-    res.json({
-      success: true,
-      data: {
-        clerkUserId,
-        sessionId: req.auth?.sessionId,
-        message: 'Authenticated successfully'
-      },
-    });
-  } catch (error: any) {
-    console.error('GET /api/users/me error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch current user',
-    });
-  }
-});
 export default router;

@@ -102,6 +102,56 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 /**
+ * Get user by Clerk user ID
+ * @returns User or null if not found
+ */
+export async function getUserByClerkId(clerkUserId: string): Promise<User | null> {
+  const query = 'SELECT * FROM users WHERE clerk_user_id = $1';
+
+  try {
+    const result = await pool.query(query, [clerkUserId]);
+    return result.rows[0] || null;
+  } catch (error) {
+    handleDatabaseError(error, 'Get user by Clerk ID');
+  }
+}
+
+/**
+ * Get or create user from Clerk authentication
+ * This is used when a user signs in via Clerk - we create a database record if needed
+ * @param clerkUserId - The Clerk user ID (e.g., user_2abc123...)
+ * @param email - User's email from Clerk
+ * @param name - User's name from Clerk
+ * @returns The user record (existing or newly created)
+ */
+export async function getOrCreateUserFromClerk(
+  clerkUserId: string,
+  email: string | null,
+  name: string
+): Promise<User> {
+  try {
+    // First, try to find existing user by Clerk ID
+    let user = await getUserByClerkId(clerkUserId);
+
+    if (user) {
+      return user;
+    }
+
+    // User doesn't exist, create new one
+    const query = `
+      INSERT INTO users (clerk_user_id, email, name)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [clerkUserId, email, name]);
+    return result.rows[0];
+  } catch (error) {
+    handleDatabaseError(error, 'Get or create user from Clerk');
+  }
+}
+
+/**
  * Get all users with pagination
  */
 export async function getUsers(
@@ -1360,3 +1410,4 @@ export async function getActionWithSystem(id: number): Promise<Action & { system
     handleDatabaseError(error, 'Get action with system');
   }
 }
+

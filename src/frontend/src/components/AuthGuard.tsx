@@ -28,16 +28,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Not signed in - show Clerk's sign in component
   if (!isSignedIn) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         backgroundColor: '#f5f5f5'
       }}>
-        <SignIn 
+        <SignIn
           routing="hash"
-          signUpUrl="/sign-up"
         />
       </div>
     );

@@ -26,19 +26,31 @@ function AppContent() {
     const checkAuth = async () => {
       try {
         const token = await getToken();
+        console.log('🔑 Frontend: Got token from Clerk, length:', token?.length);
+
         if (token) {
+          console.log('📡 Frontend: Calling /api/users/me with Bearer token');
           const response = await fetch('http://localhost:3001/api/users/me', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
+
+          console.log('📥 Frontend: Response status:', response.status);
           const data = await response.json();
+          console.log('📦 Frontend: Response data:', data);
+
           if (data.success) {
             setUserStatus(`✅ Authenticated as: ${data.data.clerkUserId}`);
+          } else {
+            setUserStatus(`❌ Auth failed: ${data.error || 'Unknown error'}`);
           }
+        } else {
+          setUserStatus('❌ No token available');
         }
-      } catch (error) {
-        setUserStatus('❌ Auth check failed');
+      } catch (error: any) {
+        console.error('❌ Frontend: Auth check error:', error);
+        setUserStatus(`❌ Auth check failed: ${error.message}`);
       }
     };
     checkAuth();
